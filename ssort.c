@@ -26,6 +26,8 @@ int main( int argc, char *argv[])
   int smax;
   int *vec, *sample, *temp, *splitter;
 
+  double tbegin = 0, tend = 0;
+
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &mpisize);
@@ -43,6 +45,11 @@ int main( int argc, char *argv[])
   for (i = 0; i < N; ++i) {
     vec[i] = rand();
   }
+
+
+  /* time count begins */
+  MPI_Barrier(MPI_COMM_WORLD);
+  tbegin = MPI_Wtime();
 
   /* sort locally */
   qsort(vec, N, sizeof(int), compare);
@@ -75,11 +82,12 @@ int main( int argc, char *argv[])
       for (i = 0; i < mpisize-1; ++i)
           splitter[i] = temp[(i+1)*count/mpisize-1];
       free(temp);
-
+/*
       printf("splitters:");
       for (i = 0; i < mpisize-1; ++i)
           printf("\t%d", splitter[i]);
       printf("\n");
+*/
   }
   MPI_Bcast(splitter, mpisize-1, MPI_INT, 0, MPI_COMM_WORLD);
 
@@ -100,10 +108,12 @@ int main( int argc, char *argv[])
       }
   }
 
+/*
   int summ = 0;
   for (i = 0; i < mpisize; ++i)
       summ += csent[i];
   printf("rank %d of N=%d sums = %d\n", rank, N, summ);
+*/
 
   /* send and receive: either you use MPI_AlltoallV, or
    * (and that might be easier), use an MPI_Alltoall to share
@@ -131,6 +141,10 @@ int main( int argc, char *argv[])
   /* local sort */
   qsort(vecord, vecsize, sizeof(int), compare);
 
+  /* time count ends */
+  MPI_Barrier(MPI_COMM_WORLD);
+  tend = MPI_Wtime();
+
   /* every processor writes its result to a file */
   FILE* fd = NULL;
   char filename[256];
@@ -146,6 +160,9 @@ int main( int argc, char *argv[])
       fprintf(fd, "%d\n", vecord[i]);
   fclose(fd);
 
+
+  // print timing
+  printf("sorting %d elements on rank %d takes %f s.\n", N, rank, tend-tbegin);
   free(vec);
   free(splitter);
   free(vecord);
