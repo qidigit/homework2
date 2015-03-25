@@ -34,7 +34,7 @@ int main( int argc, char *argv[])
 
   /* Number of random numbers per processor and the sample size (this should be increased
    * for actual tests or could be made a passed in through the command line */
-  N = 100;
+  N = 1000;
   s = 10;
 
   vec = calloc(N, sizeof(int));
@@ -162,7 +162,12 @@ int main( int argc, char *argv[])
 
 
   // print timing
-  printf("sorting %d elements on rank %d takes %f s.\n", N, rank, tend-tbegin);
+  for (i = 0; i < mpisize; ++i) {
+      MPI_Barrier(MPI_COMM_WORLD);
+      if (i == rank) {
+         printf("sorting %04d elements on rank %d takes %f s.\tmin = %d, max = %d.\n", vecsize, rank, tend-tbegin, vecord[0], vecord[vecsize-1]);
+      }
+  }
   free(vec);
   free(splitter);
   free(vecord);
