@@ -32,8 +32,10 @@ MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 if (rank == 0) {
   printf ("mpi_resolved5 has started...\n");
   if (numtasks > 2) 
-    printf("INFO: Number of tasks= %d. Only using 2 tasks.\n", numtasks);
+    printf("INFO: Number of tasks= %d. Only need 2 tasks.\n", numtasks);
   }
+if (numtasks > 2) 
+    MPI_Abort(MPI_COMM_WORLD,1);
 
 /******************************* Send task **********************************/
 if (rank == 0) {
